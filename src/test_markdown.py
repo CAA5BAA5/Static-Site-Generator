@@ -235,6 +235,13 @@ class TestMarkdown(unittest.TestCase):
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
 
+    def test_extract_title(self):
+        md = """# Tolkien Fan Club
+
+![JRR Tolkien sitting](/images/tolkien.png)
+
+Here's the deal, **I like Tolkien**."""
+        self.assertEqual(markdown.extract_title(md), "Tolkien Fan Club")
 
     if __name__ == "__main__":
         unittest.main()

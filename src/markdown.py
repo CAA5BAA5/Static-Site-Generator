@@ -185,3 +185,10 @@ def quote_to_html_node(block):
     content = " ".join(new_lines)
     children = text_to_children(content)
     return ParentNode("blockquote", children)
+
+def extract_title(markdown):
+    html_string = markdown_to_html_node(markdown).to_html()
+    if "h1" in html_string:
+        start = html_string.find("<h1>") +4
+        end = html_string.find("</h1>")
+        return html_string[start:end]
