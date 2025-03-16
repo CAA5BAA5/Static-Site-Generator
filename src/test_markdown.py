@@ -122,7 +122,76 @@ class TestMarkdown(unittest.TestCase):
             ],
             new_nodes
         )
-        
+
+    def test_markdown_to_blocks(self):
+        md = """
+        This is **bolded** paragraph
+
+        This is another paragraph with _italic_ text and `code` here
+        This is the same paragraph on a new line
+
+        - This is a list
+        - with items
+        """
+        blocks = markdown.markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+    def test_block_to_block_type(self):
+        # stress testing chars
+        self.assertEqual(markdown.block_to_block_type(1), markdown.BlockType.PARAGRAPH)
+        self.assertEqual(markdown.block_to_block_type(""), markdown.BlockType.PARAGRAPH)
+
+        # Heading
+        self.assertEqual(markdown.block_to_block_type("# header"), markdown.BlockType.HEADING)
+        self.assertEqual(markdown.block_to_block_type("#### header"), markdown.BlockType.HEADING)
+        self.assertEqual(markdown.block_to_block_type("#header"), markdown.BlockType.PARAGRAPH)
+
+        # Code
+        self.assertEqual(markdown.block_to_block_type("\\\\\\code\\\\\\"), markdown.BlockType.CODE)
+        self.assertEqual(markdown.block_to_block_type("\\\\\\ code\\\\\\"), markdown.BlockType.CODE)
+        self.assertEqual(markdown.block_to_block_type("\\\\ ##code \\\\"), markdown.BlockType.PARAGRAPH)
+
+        # Quote
+        quote = """> veni\n> vidi\n> vici"""
+        self.assertEqual(markdown.block_to_block_type(quote), markdown.BlockType.QUOTE)
+        quote = """> veni\n> vidi\nvici"""
+        self.assertEqual(markdown.block_to_block_type(quote), markdown.BlockType.PARAGRAPH)
+        quote = """veni\n> vidi\n> vici"""
+        self.assertEqual(markdown.block_to_block_type(quote), markdown.BlockType.PARAGRAPH)
+
+        # unordered_list
+        ul = """- first\n- second\n- third"""
+        self.assertEqual(markdown.block_to_block_type(ul), markdown.BlockType.UNORDERED_LIST)
+        ul = """ - first\n- second\n- third"""
+        self.assertEqual(markdown.block_to_block_type(ul), markdown.BlockType.PARAGRAPH)
+        ul = """ first\n- second\n- third"""
+        self.assertEqual(markdown.block_to_block_type(ul), markdown.BlockType.PARAGRAPH)
+        ul = """ first\n- second\n - third"""
+        self.assertEqual(markdown.block_to_block_type(ul), markdown.BlockType.PARAGRAPH)
+
+        #ordered_list
+        ol = """1. first\n2. second\n3. third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.ORDERED_LIST)
+        ol = """1. first 2. second 3.  third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.ORDERED_LIST)
+        ol = """1. first\n34. second\n4. third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.PARAGRAPH)
+        ol = """ 1. first\n34. second\n4. third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.PARAGRAPH)
+        ol = """1. first\n34 second\n4. third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.PARAGRAPH)
+        ol = """ 1. first\n34.second\n 4. third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.PARAGRAPH)
+        ol = """1.first\n34. second\n4.  third"""
+        self.assertEqual(markdown.block_to_block_type(ol), markdown.BlockType.PARAGRAPH)
+
 
     if __name__ == "__main__":
         unittest.main()

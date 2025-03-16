@@ -1,5 +1,14 @@
 from textnode import TextType, TextNode
+from enum import Enum
 import re
+
+class BlockType(Enum):
+    PARAGRAPH = "Paragraph"
+    HEADING = "Heading"
+    CODE = "Code"
+    QUOTE = "Quote"
+    UNORDERED_LIST = "Unordered_List"
+    ORDERED_LIST = "Ordered_List"
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     if not isinstance(old_nodes, list):
@@ -78,3 +87,32 @@ def text_to_textnodes(text):
     # TextNode( and a , Text, None), 
     # TextNode(link, Link, https://boot.dev)]
     return text
+
+def markdown_to_blocks(document):
+    filtered_blocks = []
+    for block in document.split("\n\n"):
+        block = block.strip()
+        block = re.sub(' +', ' ', block)
+        block = block.replace("\n ", "\n")
+        if len(block) > 0:
+            filtered_blocks.append(block)
+
+    return(filtered_blocks)
+
+def block_to_block_type(markdown_block):
+    markdown_block = str(markdown_block)
+    if markdown_block.startswith(("# ","## ", "### ", "#### ", "##### ", "###### ")):
+        return BlockType.HEADING
+    elif markdown_block.startswith("\\\\\\") and markdown_block.endswith("\\\\\\"):
+        return BlockType.CODE
+    
+    md_lines = markdown_block.split("\n")
+    if all(line.startswith(">") for line in md_lines):
+        return BlockType.QUOTE
+    elif all(line.startswith("- ") for line in md_lines):
+        return BlockType.UNORDERED_LIST
+    elif all(re.search(r"^(\d+\. )", line) for line in md_lines):
+        list_of_numbers = list(map(lambda x: int(x.split(".")[0]),re.findall(r"(\d+\. )", markdown_block)))
+        if sorted(list_of_numbers) == list(range(min(list_of_numbers), max(list_of_numbers) + 1)):
+            return BlockType.ORDERED_LIST
+    return BlockType.PARAGRAPH
